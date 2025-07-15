@@ -128,24 +128,17 @@ function toggleContact(header) {
 
 // Map Functions
 function openNaverMap() {
-    const address = encodeURIComponent('서울 영등포구 여의도동 60');
+    const address = encodeURIComponent('여의도 63빌딩 백리향');
     const url = `https://map.naver.com/v5/search/${address}`;
     window.open(url, '_blank');
     showNotification('네이버 지도로 이동합니다 🗺️');
 }
 
 function openKakaoMap() {
-    const address = encodeURIComponent('서울 영등포구 여의도동 60');
+    const address = encodeURIComponent('여의도 63빌딩 백리향');
     const url = `https://map.kakao.com/link/search/${address}`;
     window.open(url, '_blank');
     showNotification('카카오맵으로 이동합니다 🗺️');
-}
-
-function openTmap() {
-    const address = encodeURIComponent('서울 영등포구 여의도동 60');
-    const url = `https://tmap.life/route/search?goalname=${address}`;
-    window.open(url, '_blank');
-    showNotification('티맵으로 이동합니다 🗺️');
 }
 
 // Communication Functions
