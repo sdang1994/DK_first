@@ -5,10 +5,26 @@ const SUPABASE_URL = 'https://oswopayqxiouowsnjpxi.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zd29wYXlxeGlvdW93c25qcHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NjQyMDYsImV4cCI6MjA2ODE0MDIwNn0.7MrbMXH6N4dogh8slNJoOfG-B0HeSU0_x9aITGF1ivI';
 
 // Initialize Supabase client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase;
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - 초기화 시작');
+    
+    // Initialize Supabase client
+    if (typeof window.supabase !== 'undefined') {
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase 클라이언트 초기화 성공:', supabase);
+        } catch (error) {
+            console.error('Supabase 클라이언트 초기화 오류:', error);
+            supabase = null;
+        }
+    } else {
+        console.error('Supabase 라이브러리가 로드되지 않았습니다.');
+        supabase = null;
+    }
+    
     initializeApp();
     setupScrollAnimations();
     setupContactToggles();
@@ -34,8 +50,10 @@ function initializeApp() {
     // Auto-trigger fade up animations for visible elements
     triggerInitialAnimations();
     
-    // Load messages from server
-    loadMessages();
+    // Load messages from server with delay to ensure DOM is ready
+    setTimeout(() => {
+        loadMessages();
+    }, 1500);
 }
 
 // Scroll Animations
@@ -192,7 +210,7 @@ function showRSVPModal() {
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label for="participantMessage" style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">축하메시지</label>
-                    <textarea id="participantMessage" name="comments" required style="
+                    <textarea id="participantMessage" name="comments" style="
                         width: 100%;
                         padding: 10px;
                         border: 1px solid #ddd;
@@ -201,7 +219,7 @@ function showRSVPModal() {
                         min-height: 100px;
                         resize: vertical;
                         box-sizing: border-box;
-                    " placeholder="축하 메시지를 입력해주세요"></textarea>
+                    " placeholder="도경이를 위한 축하 메시지를 입력해주세요, 필수 사항은 아닙니다."></textarea>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: center;">
                     <button type="submit" style="
@@ -239,16 +257,22 @@ function showRSVPModal() {
         const name = formData.get('name').toString().trim();
         const comments = formData.get('comments').toString().trim();
         
-        if (!name || !comments) {
-            showNotification('모든 항목을 입력해주세요 ❌');
+        if (!name) {
+            showNotification('이름을 입력해주세요 ❌');
             return;
         }
         
         try {
+            // Check if supabase client is available
+            if (!supabase) {
+                showNotification('데이터베이스 연결이 준비되지 않았습니다. 잠시 후 다시 시도해주세요 ❌');
+                return;
+            }
+            
             // Insert data into Supabase
             const { data, error } = await supabase
                 .from('participant')
-                .insert([{ name, comments }]);
+                .insert([{ name, comments: comments || '' }]);
             
             if (error) {
                 throw error;
@@ -260,7 +284,7 @@ function showRSVPModal() {
             loadMessages();
         } catch (error) {
             console.error('RSVP 전송 오류:', error);
-            showNotification('서버 연결 오류가 발생했습니다 ❌');
+            showNotification('전송 중 오류가 발생했습니다. 다시 시도해주세요 ❌');
         }
     });
     
@@ -281,50 +305,112 @@ function showRSVPModal() {
 // Guest Book Functions
 async function loadMessages() {
     try {
-        // Fetch data from Supabase
-        const { data: messages, error } = await supabase
-            .from('participant')
-            .select('name, comments')
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            throw error;
+        // Check if supabase client is available
+        if (!supabase) {
+            console.log('Supabase 클라이언트가 초기화되지 않았습니다.');
+            displayMessages([]);
+            return;
         }
         
+        console.log('Supabase에서 메시지 로딩 중...');
+        
+        // Fetch data from Supabase - 더 간단한 방법으로 시도
+        console.log('쿼리 시작...');
+        
+        const response = await supabase
+            .from('participant')
+            .select('*');
+        
+        console.log('쿼리 응답:', response);
+        
+        const { data: messages, error } = response;
+        
+        if (error) {
+            console.error('Supabase 쿼리 에러:', error);
+            // 오류 발생 시 조용히 빈 목록 표시
+            displayMessages([]);
+            return;
+        }
+        
+        console.log('로드된 메시지 수:', messages?.length || 0);
+        console.log('로드된 메시지:', messages);
+        
+        // 메시지가 있든 없든 표시
         displayMessages(messages || []);
+        
     } catch (error) {
         console.error('메시지 로드 오류:', error);
-        showNotification('서버 연결 오류가 발생했습니다 ❌');
+        // 예외 발생 시에도 조용히 빈 목록 표시
+        displayMessages([]);
     }
 }
 
 function displayMessages(messages) {
     const guestBookList = document.getElementById('guestBookList');
-    if (!guestBookList) return;
+    if (!guestBookList) {
+        console.error('guestBookList 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
+    console.log('메시지 표시 시작 - 받은 데이터:', messages);
     
     // 기존 메시지 제거
     guestBookList.innerHTML = '';
     
-    if (messages.length === 0) {
-        guestBookList.innerHTML = '<li style="text-align: center; color: #999; padding: 20px;">아직 축하 메시지가 없습니다.</li>';
+    if (!messages || messages.length === 0) {
+        const emptyMessage = document.createElement('li');
+        emptyMessage.style.cssText = 'text-align: center; color: #999; padding: 20px; list-style: none;';
+        emptyMessage.textContent = '아직 축하 메시지가 없습니다.';
+        guestBookList.appendChild(emptyMessage);
+        console.log('빈 메시지 목록 표시');
         return;
     }
     
+    console.log(`${messages.length}개의 메시지 표시 중...`);
+    
     // 메시지들을 최신순으로 표시
     messages.forEach((message, index) => {
+        console.log(`메시지 ${index + 1} 처리 중:`, message);
+        
+        // 메시지 데이터 유효성 검사
+        if (!message) {
+            console.warn('빈 메시지 데이터:', message);
+            return;
+        }
+        
+        const name = message.name || '익명';
+        const comments = message.comments || '';
+        
+        console.log(`메시지 ${index + 1} - 이름: ${name}, 내용: ${comments}`);
+        
+        // comments가 공란인 경우 메시지 표시하지 않음
+        if (!comments.trim()) {
+            console.log(`메시지 ${index + 1} - 축하메시지가 공란이므로 표시하지 않음`);
+            return;
+        }
+        
         const messageItem = document.createElement('li');
         messageItem.className = 'guest-book-item';
-        messageItem.style.opacity = '0';
-        messageItem.style.transform = 'translateY(20px)';
+        messageItem.style.cssText = `
+            opacity: 0;
+            transform: translateY(20px);
+            list-style: none;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
         
         messageItem.innerHTML = `
-            <div class="item-header">
-                <div class="item-writer">from. ${escapeHtml(message.name)}</div>
+            <div class="item-header" style="margin-bottom: 10px;">
+                <div class="item-writer" style="font-weight: bold; color: #7eba76;">from. ${escapeHtml(name)}</div>
             </div>
-            <p class="item-message">${escapeHtml(message.comments)}</p>
+            <p class="item-message" style="margin: 0; line-height: 1.4; color: #333;">${escapeHtml(comments)}</p>
         `;
         
         guestBookList.appendChild(messageItem);
+        console.log(`메시지 ${index + 1} DOM에 추가됨`);
         
         // 순차적으로 애니메이션 적용
         setTimeout(() => {
@@ -333,6 +419,18 @@ function displayMessages(messages) {
             messageItem.style.transform = 'translateY(0)';
         }, index * 100);
     });
+    
+    console.log('모든 메시지 표시 완료');
+}
+
+// Safe message loading wrapper for button clicks
+function safeLoadMessages() {
+    if (supabase) {
+        loadMessages();
+    } else {
+        console.log('Supabase 클라이언트가 준비되지 않았습니다.');
+        displayMessages([]);
+    }
 }
 
 function copyToClipboard(text) {
