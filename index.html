@@ -6,7 +6,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="생일파티에 초대합니다">
     <meta property="og:site_name" content="생일파티에 초대합니다">
-    <meta property="og:description" content="8월 30일 오후 12:00 축하 파티">
+    <meta property="og:description" content="8월 30일 오후 12:00">
     <title>도경이의 첫 번째 생일파티에 초대합니다</title>
     <link rel="stylesheet" href="style.css">
     <!-- Supabase JavaScript Client -->
@@ -83,22 +83,19 @@
                                 </p>
                                 <div class="bar"></div>
                                 <div class="greeting-names" style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                    gap: 20px;
+                                    text-align: center;
                                     margin-top: 20px;
                                     padding: 15px;
                                 ">
                                     <div class="name-group" style="
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
+                                        display: inline-block;
+                                        text-align: center;
                                         padding: 8px 12px;
                                         background: rgba(126, 186, 118, 0.1);
                                         border-radius: 10px;
                                         transition: transform 0.3s ease;
                                         min-width: 60px;
+                                        vertical-align: middle;
                                     ">
                                         <div class="relationship" style="
                                             font-size: 12px;
@@ -108,6 +105,7 @@
                                             text-transform: uppercase;
                                             letter-spacing: 1px;
                                         ">아빠</div>
+
                                         <div class="name" style="
                                             font-size: 16px;
                                             font-weight: 700;
@@ -120,16 +118,18 @@
                                         font-size: 18px;
                                         font-weight: bold;
                                         margin: 0 5px;
+                                        display: inline-block;
+                                        vertical-align: middle;
                                     ">♥</div>
                                     <div class="name-group" style="
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
+                                        display: inline-block;
+                                        text-align: center;
                                         padding: 8px 12px;
                                         background: rgba(126, 186, 118, 0.1);
                                         border-radius: 10px;
                                         transition: transform 0.3s ease;
                                         min-width: 60px;
+                                        vertical-align: middle;
                                     ">
                                         <div class="relationship" style="
                                             font-size: 12px;
@@ -305,7 +305,7 @@
                     <!-- Guest Book Section -->
                     <section class="section">
                         <h2 class="section-title fade-up">축하 메시지 🎉</h2>
-                        <div class="section-content fade-up">
+                        <div class="section-content fade-up">gi
                             <div class="guest-book">
                                 <ul class="guest-book-list" id="guestBookList">
                                     <!-- 메시지들이 여기에 동적으로 로드됩니다 -->
