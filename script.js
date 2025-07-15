@@ -1,5 +1,12 @@
 // Global Variables
 
+// Supabase configuration
+const SUPABASE_URL = 'https://oswopayqxiouowsnjpxi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zd29wYXlxeGlvdW93c25qcHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NjQyMDYsImV4cCI6MjA2ODE0MDIwNn0.7MrbMXH6N4dogh8slNJoOfG-B0HeSU0_x9aITGF1ivI';
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -141,17 +148,6 @@ function openKakaoMap() {
     showNotification('카카오맵으로 이동합니다 🗺️');
 }
 
-// Communication Functions
-function callPhone(phoneNumber) {
-    window.location.href = `tel:${phoneNumber}`;
-    showNotification('전화를 걸고 있습니다 📞');
-}
-
-function sendMessage(phoneNumber) {
-    window.location.href = `sms:${phoneNumber}`;
-    showNotification('문자 메시지를 보냅니다 💬');
-}
-
 // RSVP Functions
 function openRSVP() {
     showRSVPModal();
@@ -249,24 +245,19 @@ function showRSVPModal() {
         }
         
         try {
-            const response = await fetch('https://your-server-domain.com/participation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, comments })
-            });
+            // Insert data into Supabase
+            const { data, error } = await supabase
+                .from('participant')
+                .insert([{ name, comments }]);
             
-            if (response.ok) {
-                const result = await response.json();
-                showNotification('참석의사가 성공적으로 전달되었습니다! 🎉');
-                modal.remove();
-                // 메시지 목록 새로고침
-                loadMessages();
-            } else {
-                const error = await response.json();
-                showNotification(`오류: ${error.error} ❌`);
+            if (error) {
+                throw error;
             }
+            
+            showNotification('참석의사가 성공적으로 전달되었습니다! 🎉');
+            modal.remove();
+            // 메시지 목록 새로고침
+            loadMessages();
         } catch (error) {
             console.error('RSVP 전송 오류:', error);
             showNotification('서버 연결 오류가 발생했습니다 ❌');
@@ -290,13 +281,17 @@ function showRSVPModal() {
 // Guest Book Functions
 async function loadMessages() {
     try {
-        const response = await fetch('https://your-server-domain.com/participation');
-        if (response.ok) {
-            const result = await response.json();
-            displayMessages(result.data);
-        } else {
-            showNotification('메시지를 불러오는데 실패했습니다 ❌');
+        // Fetch data from Supabase
+        const { data: messages, error } = await supabase
+            .from('participant')
+            .select('name, comments')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            throw error;
         }
+        
+        displayMessages(messages || []);
     } catch (error) {
         console.error('메시지 로드 오류:', error);
         showNotification('서버 연결 오류가 발생했습니다 ❌');
