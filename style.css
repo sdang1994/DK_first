@@ -31,6 +31,19 @@ body {
     padding: 20px;
 }
 
+.gowun-dodum-regular {
+  font-family: "Gowun Dodum", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.oooh-baby-regular {
+  font-family: "Oooh Baby", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
 .cover-container {
     width: 100%;
     max-width: 400px;

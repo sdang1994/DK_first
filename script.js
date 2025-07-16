@@ -424,7 +424,7 @@ function openImageModal(src, alt) {
             <img src="${src}" alt="${alt}" style="
                 width: 100%; height: 100%; object-fit: contain; border-radius: 10px;
             ">
-            <button onclick="this.closest('div[style*=\\"position: fixed\\"]').remove()" style="
+            <button class="close-btn" style="
                 position: absolute; top: -15px; right: -15px; background: white;
                 border: none; width: 30px; height: 30px; border-radius: 50%;
                 cursor: pointer; font-size: 18px; color: #333;
@@ -433,6 +433,12 @@ function openImageModal(src, alt) {
     `;
     
     document.body.appendChild(modal);
+    
+    // Close button event listener
+    const closeBtn = modal.querySelector('.close-btn');
+    closeBtn.addEventListener('click', function() {
+        modal.remove();
+    });
     
     modal.addEventListener('click', function(e) {
         if (e.target === modal) modal.remove();
